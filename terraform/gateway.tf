@@ -51,3 +51,40 @@ resource "aws_api_gateway_stage" "example" {
   rest_api_id   = aws_api_gateway_rest_api.my_lambda_gateway.id
   stage_name    = "exercise"
 }
+
+resource "aws_route53_zone" "domain_r53_zone" {
+  name = "example.com"
+  private_zone = false
+}
+
+resource "aws_route53_record" "domain_r53_rec" {
+  zone_id = aws_route53_zone.domain_r53_zone.zone_id
+  name    = "custom"
+  type    = "CNAME"
+  ttl     = "300"
+  records = ["${aws_api_gateway_rest_api.my_lambda_gateway.id}.execute-api.eu-west-1.amazonaws.com"]
+}
+
+resource "aws_acm_certificate" "domain_cert" {
+  domain_name       = "example.com"
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_acm_certificate_validation" "domain_cert_validation" {
+  certificate_arn         = aws_acm_certificate.domain_cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.domain_r53_rec : record.fqdn]
+}
+
+resource "aws_api_gateway_domain_name" "example_domain_name" {
+  domain_name              = "api.example.com"
+  regional_certificate_arn = aws_acm_certificate_validation.domain_cert_validation.certificate_arn
+  security_policy          = "TLS_1_2"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
