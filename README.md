@@ -37,6 +37,8 @@ If time had allowed, I would have like to have completed the following:
   - Split the Terraform into modules, one for each component being created
   - Configure the variables into tfvars files, which then overwrite the defaults values configured
   - Review where the use of locals could have helped with the readability of the code
+- The S3 bucket name is static in the Terraform code. Not only would I configure a variable for this, but I would also consider using the random provider to create a random string to append to the bucket name in order to make it globally unique.
+- I have retained the same object name in the S3 bucket, so each time the script runs, it replaces the object. This could be adjusted to create a new object each time. Object versioning and lifecycle rules could then be implemented.
 - Comment the code further to help someone follow what's going to be build. I would also use more tags on the AWS side.
 - Implement tighter security:
   - Lock down the roles created to implement the least privilage use approach
